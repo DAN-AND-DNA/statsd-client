@@ -1,4 +1,4 @@
-package statsd
+package internal
 
 import (
 	"bufio"
@@ -16,7 +16,7 @@ var debug = Debug("statsd")
 const defaultBufSize = 512
 
 // Client is statsd client representing a
-// onnection to a statsd server.
+// connection to a statsd server.
 type Client struct {
 	conn   net.Conn
 	buf    *bufio.Writer
