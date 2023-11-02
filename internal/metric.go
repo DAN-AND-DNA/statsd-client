@@ -2,6 +2,7 @@ package internal
 
 import (
 	"bytes"
+	"github.com/dan-and-dna/statsd-client/statsd"
 	"log"
 	"math/rand"
 	"sync"
@@ -16,7 +17,7 @@ var (
 type Metric struct {
 	statsdM      sync.RWMutex
 	ready        bool
-	clientPool   []*Client
+	clientPool   []*statsd.Client
 	localBufPool []*bytes.Buffer
 	wg           sync.WaitGroup
 	local        bool
@@ -111,14 +112,14 @@ func (metric *Metric) reCreate(prefix string, addresses []string, local bool) er
 
 	// 重建资源
 	for _, address := range addresses {
-		var client *Client
+		var client *statsd.Client
 		var err error
 		if local {
 			localBuf := new(bytes.Buffer)
 			metric.localBufPool = append(metric.localBufPool, localBuf)
-			client = NewClient(localBuf)
+			client = statsd.NewClient(localBuf)
 		} else {
-			client, err = DialTimeout(address, 5*time.Second)
+			client, err = statsd.DialTimeout(address, 5*time.Second)
 			if err != nil {
 				return err
 			}

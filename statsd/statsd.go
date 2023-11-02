@@ -1,4 +1,4 @@
-package internal
+package statsd
 
 import (
 	"bufio"
