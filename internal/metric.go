@@ -3,6 +3,7 @@ package internal
 import (
 	"bytes"
 	"github.com/dan-and-dna/statsd-client/statsd"
+	"hash/crc32"
 	"log"
 	"math/rand"
 	"sync"
@@ -158,7 +159,18 @@ func (metric *Metric) increment(name string, count int, rate float64, needFlush 
 	metric.wg.Add(1)
 	defer metric.wg.Done()
 
-	index := rand.Intn(len(metric.clientPool))
+	// 同一个指标使用同一个客户端，避免互相覆盖
+	connLen := uint32(len(metric.clientPool))
+	var index uint32 = 0
+
+	if connLen == 0 {
+		return "", nil
+	}
+
+	if connLen > 1 {
+		index = crc32.ChecksumIEEE([]byte(name)) % connLen
+	}
+
 	client := metric.clientPool[index]
 	if client == nil {
 		return "", nil
@@ -216,7 +228,18 @@ func (metric *Metric) Gauge(name string, count int, needFlush bool) error {
 	metric.wg.Add(1)
 	defer metric.wg.Done()
 
-	index := rand.Intn(len(metric.clientPool))
+	// 同一个指标使用同一个客户端，避免互相覆盖
+	connLen := uint32(len(metric.clientPool))
+	var index uint32 = 0
+
+	if connLen == 0 {
+		return nil
+	}
+
+	if connLen > 1 {
+		index = crc32.ChecksumIEEE([]byte(name)) % connLen
+	}
+
 	client := metric.clientPool[index]
 	if client == nil {
 		return nil
